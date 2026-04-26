@@ -12,14 +12,14 @@ Two Electron processes communicate over IPC. The main process owns OS-level conc
 │  │ Hotkeys  │──▶│ Capture  │──▶│   AI Backend    │ │
 │  │ (global  │   │(desktop  │   │                 │ │
 │  │ shortcut)│   │Capturer) │   │ ┌─────────────┐ │ │
-│  └──────────┘   └──────────┘   │ │ claude-sdk  │ │ │
+│  └──────────┘   └──────────┘   │ │ claude-cli  │ │ │
 │                                │ ├─────────────┤ │ │
-│  ┌──────────────────────────┐  │ │ claude-cli  │ │ │
+│  ┌──────────────────────────┐  │ │  codex-cli  │ │ │
 │  │     Window Manager       │  │ ├─────────────┤ │ │
-│  │  - overlay BrowserWindow │  │ │  codex-cli  │ │ │
+│  │  - overlay BrowserWindow │  │ │ gemini-cli  │ │ │
 │  │  - setContentProtection  │  │ └─────────────┘ │ │
 │  │  - always-on-top         │  └─────────────────┘ │
-│  └──────────────────────────┘                       │
+│  └──────────────────────────┘  └─────────────────┘ │
 │              │  IPC (ipcMain / ipcRenderer)          │
 └──────────────┼──────────────────────────────────────┘
                │
@@ -52,13 +52,6 @@ Two Electron processes communicate over IPC. The main process owns OS-level conc
 4. Image converted to base64 PNG
 5. main/ai/backend.ts routes to selected backend:
 
-   [claude-sdk]
-     → anthropic.messages.create({ model, messages: [{ role: "user",
-         content: [{ type: "image", source: { type: "base64", ... } },
-                   { type: "text", text: SYSTEM_PROMPT }] }],
-         stream: true })
-     → streams MessageStreamEvent chunks via IPC to renderer
-
    [claude-cli]
      → spawn("claude", ["-p", prompt_with_base64_image])
      → pipe stdout chunks via IPC to renderer
@@ -66,6 +59,11 @@ Two Electron processes communicate over IPC. The main process owns OS-level conc
    [codex-cli]
      → spawn("codex", [prompt])
      → pipe stdout chunks via IPC to renderer
+
+   [gemini-cli]
+     → write screenshot to a temporary PNG
+     → spawn("gemini", ["--prompt", prompt_with_@capture_png, "--output-format", "json"])
+     → send parsed response to renderer
 
 6. Renderer receives stream chunks → appends to Answer component
 7. Code blocks detected → syntax highlighted via shiki or prism
@@ -117,18 +115,12 @@ All backends implement the same interface so they're swappable:
 ```typescript
 interface AIBackend {
   sendMessage(
+    systemPrompt: string,          // mode-specific instruction block
     messages: Message[],           // conversation history
-    image?: string,                // base64 PNG, optional
     onChunk: (text: string) => void // streaming callback
   ): Promise<void>
 }
 ```
-
-### claude-sdk backend
-- Uses `@anthropic-ai/sdk` with `messages.stream()`
-- Vision: passes image as `image` content block
-- Streaming: `stream.on("text", onChunk)`
-- Auth: `ANTHROPIC_API_KEY` from macOS Keychain via `keytar`
 
 ### claude-cli backend
 - Spawns `claude -p "<prompt>"` as child process
@@ -142,6 +134,13 @@ interface AIBackend {
 - Streaming: reads stdout
 - Auth: reuses Codex CLI config
 - Requires Codex CLI installed: `npm i -g @openai/codex`
+
+### gemini-cli backend
+- Spawns `gemini --prompt "<prompt>" --output-format json` as a child process
+- Screenshot is written to a temporary PNG and attached with Gemini CLI `@file` inclusion
+- Uses the installed Gemini CLI login/session instead of an API key flow inside the app
+- Returns the final JSON response to the renderer in a single streamed chunk
+- Requires Gemini CLI installed: `npm i -g @google/gemini-cli`
 
 ## IPC Channels
 
@@ -273,7 +272,6 @@ The system prompt is passed as the `system` parameter on every API call and prep
 
 ## Security Notes
 
-- API keys stored in macOS Keychain via `keytar`, never in files or env
 - `contextIsolation: true` on renderer — no direct Node access from React
 - Preload script exposes only a typed `window.api` surface via `contextBridge`
 - No external network calls except to AI provider APIs

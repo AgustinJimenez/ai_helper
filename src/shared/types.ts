@@ -2,7 +2,7 @@ export const INTERVIEW_MODES = ['coding', 'system-design', 'behavioral'] as cons
 
 export type InterviewMode = typeof INTERVIEW_MODES[number]
 
-export const BACKEND_TYPES = ['claude-sdk', 'claude-cli', 'codex-cli'] as const
+export const BACKEND_TYPES = ['claude-cli', 'codex-cli', 'gemini-cli'] as const
 
 export type BackendType = typeof BACKEND_TYPES[number]
 
@@ -10,14 +10,11 @@ export type ScreenPermissionStatus = 'granted' | 'denied' | 'not-determined'
 
 export interface Settings {
   backend: BackendType
-  model: string
   interviewMode: InterviewMode
   overlayOpacity: number
 }
 
-export type SettingsUpdate = Partial<Settings> & {
-  apiKey?: string
-}
+export type SettingsUpdate = Partial<Settings>
 
 export interface Message {
   role: 'user' | 'assistant'

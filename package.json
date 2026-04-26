@@ -1,7 +1,7 @@
 {
-  "name": "interview-helper",
+  "name": "ai-helper",
   "version": "1.0.0",
-  "description": "Invisible AI overlay for technical interviews",
+  "description": "Desktop AI helper overlay for Claude Code, OpenAI Codex, and Gemini CLI",
   "main": "out/main/index.js",
   "scripts": {
     "dev": "electron-vite dev",
@@ -13,7 +13,6 @@
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.30.0",
     "@electron-toolkit/preload": "^3.0.1",
     "@electron-toolkit/utils": "^3.0.0",
     "react": "^18.3.1",

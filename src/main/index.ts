@@ -3,7 +3,7 @@ import { join } from 'node:path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { registerHotkeys, unregisterHotkeys } from './hotkeys'
 import { captureScreen, getScreenPermission } from './capture'
-import { loadSettings, saveSettings, loadApiKey, saveApiKey } from './settings'
+import { loadSettings, saveSettings } from './settings'
 import { getBackend } from './ai/backend'
 import { getSystemPrompt } from './ai/prompts'
 import { isBackendType, isInterviewMode } from '../shared/types'
@@ -23,7 +23,7 @@ let overlay: BrowserWindow
 const history: Message[] = []
 let currentMode: InterviewMode = 'coding'
 let streaming = false
-let backend = getBackend(loadSettings().backend, loadApiKey())
+let backend = getBackend(loadSettings().backend)
 
 function sanitizeSettingsUpdate(payload: unknown): SettingsUpdate {
   if (!payload || typeof payload !== 'object') return {}
@@ -34,17 +34,11 @@ function sanitizeSettingsUpdate(payload: unknown): SettingsUpdate {
   if (isBackendType(raw.backend)) {
     settingsUpdate.backend = raw.backend
   }
-  if (typeof raw.model === 'string') {
-    settingsUpdate.model = raw.model
-  }
   if (isInterviewMode(raw.interviewMode)) {
     settingsUpdate.interviewMode = raw.interviewMode
   }
   if (typeof raw.overlayOpacity === 'number') {
     settingsUpdate.overlayOpacity = raw.overlayOpacity
-  }
-  if (typeof raw.apiKey === 'string') {
-    settingsUpdate.apiKey = raw.apiKey
   }
 
   return settingsUpdate
@@ -131,7 +125,7 @@ async function handleCapture(): Promise<void> {
 }
 
 app.whenReady().then(() => {
-  electronApp.setAppUserModelId('com.interview-helper')
+  electronApp.setAppUserModelId('com.agustinjimenez.aihelper')
 
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window)
@@ -188,28 +182,16 @@ app.whenReady().then(() => {
   })
 
   ipcMain.handle('get-settings', () => {
-    const settings = loadSettings()
-    return {
-      ...settings,
-      hasApiKey: settings.backend !== 'claude-sdk' || !!loadApiKey()
-    }
+    return loadSettings()
   })
 
   ipcMain.handle('set-settings', (_, payload: unknown) => {
     const update = sanitizeSettingsUpdate(payload)
-    const { apiKey, ...settingsUpdate } = update
+    saveSettings(update)
 
-    if (typeof apiKey === 'string') {
-      saveApiKey(apiKey)
-    }
-    if (settingsUpdate.interviewMode) {
-      currentMode = settingsUpdate.interviewMode
-    }
-    saveSettings(settingsUpdate)
-    // Reinitialize backend if type changed
-    if (settingsUpdate.backend) {
-      backend = getBackend(settingsUpdate.backend, loadApiKey())
-    }
+    const nextSettings = loadSettings()
+    currentMode = nextSettings.interviewMode
+    backend = getBackend(nextSettings.backend)
   })
 
   ipcMain.on('clear-conversation', () => {

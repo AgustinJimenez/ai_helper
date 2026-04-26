@@ -1,11 +1,11 @@
-# Interview Helper
+# AI Helper
 
-A desktop overlay tool that provides AI-assisted answers during technical interviews. The overlay is invisible to screen-sharing software (Zoom, Meet, Teams) but visible to the user.
+A desktop overlay tool focused on Claude Code, OpenAI Codex, and Gemini CLI. It captures the current screen, sends the prompt to the selected AI backend, and streams the response into an overlay that is visible to the user while remaining excluded from screen sharing software such as Zoom, Meet, and Teams.
 
 ## What It Does
 
 - Hotkey triggers a screenshot of the interview window
-- Screenshot is sent to an AI backend (Claude API, Claude Code CLI, or Codex CLI)
+- Screenshot is sent to an AI backend (Claude Code CLI, Codex CLI, or Gemini CLI)
 - Answer streams back into a floating overlay window
 - Overlay is invisible to screen capture / screenshare
 - User can ask follow-up questions in a running conversation
@@ -14,11 +14,10 @@ A desktop overlay tool that provides AI-assisted answers during technical interv
 
 - **Framework:** Electron (Node.js + Chromium)
 - **UI:** React + Tailwind CSS
-- **AI:** Pluggable backend — Anthropic SDK (direct), Claude Code CLI, or OpenAI Codex CLI
+- **AI:** Pluggable backend — Claude Code CLI, OpenAI Codex CLI, or Gemini CLI
 - **Screen capture:** Electron `desktopCapturer` API
 - **Invisible overlay:** `BrowserWindow.setContentProtection(true)` (macOS)
 - **Hotkeys:** `electron-globalShortcut`
-- **API key storage:** macOS Keychain via `keytar`
 
 ## Platform
 
@@ -48,7 +47,7 @@ macOS first. `setContentProtection` is macOS-specific. Windows support is out of
 ## Project Structure
 
 ```
-interview-helper/
+ai-helper/
 ├── src/
 │   ├── main/               # Electron main process
 │   │   ├── index.ts        # App entry, window creation
@@ -57,9 +56,9 @@ interview-helper/
 │   │   └── ai/
 │   │       ├── backend.ts  # Backend interface
 │   │       ├── prompts.ts  # System prompt templates per mode
-│   │       ├── claude-sdk.ts
 │   │       ├── claude-cli.ts
-│   │       └── codex-cli.ts
+│   │       ├── codex-cli.ts
+│   │       └── gemini-cli.ts
 │   ├── renderer/           # React UI (overlay)
 │   │   ├── App.tsx
 │   │   ├── components/
@@ -86,11 +85,10 @@ npm run package    # Package into .app
 
 ## Environment / Config
 
-Settings are stored in Electron's userData directory. API keys go in macOS Keychain, never in files.
+Settings are stored in Electron's userData directory.
 
 ```
-backend: "claude-sdk" | "claude-cli" | "codex-cli"
-model: string
+backend: "claude-cli" | "codex-cli" | "gemini-cli"
 overlayOpacity: number (0.0 - 1.0)
 overlayPosition: { x, y, width, height }
 hotkeys: { capture, toggle, clear }
@@ -109,6 +107,6 @@ See `src/main/ai/prompts.ts` for full templates. No user profile needed — prom
 
 ## AI Backend Notes
 
-- **claude-sdk**: Uses `@anthropic-ai/sdk` directly. Requires `ANTHROPIC_API_KEY` in Keychain. Supports vision + streaming.
-- **claude-cli**: Shells out to `claude -p "<prompt>"`. Reuses Claude Code CLI auth. Pipe image as base64 in prompt.
-- **codex-cli**: Shells out to `codex "<prompt>"`. Requires OpenAI key configured in Codex CLI.
+- **claude-cli**: Shells out to the installed `claude` command and reuses Claude Code CLI auth.
+- **codex-cli**: Shells out to the installed `codex` command and reuses Codex CLI auth.
+- **gemini-cli**: Shells out to the installed `gemini` command, reuses Gemini CLI auth, and passes screenshots as temporary PNG attachments via `@file` references.

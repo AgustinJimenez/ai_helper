@@ -8,24 +8,17 @@ interface Props {
 }
 
 export function Settings({ onSave, onClose }: Props): JSX.Element {
-  const [backend, setBackend] = useState<BackendType>('claude-sdk')
-  const [apiKey, setApiKey] = useState('')
-  const [model, setModel] = useState('claude-sonnet-4-6')
-  const [hasExistingKey, setHasExistingKey] = useState(false)
+  const [backend, setBackend] = useState<BackendType>('claude-cli')
 
   useEffect(() => {
     window.api.getSettings().then((s) => {
       setBackend(s.backend)
-      setModel(s.model)
-      setHasExistingKey(s.hasApiKey && s.backend === 'claude-sdk')
     })
   }, [])
 
   const handleSave = async (): Promise<void> => {
     await window.api.setSettings({
-      backend,
-      model,
-      ...(backend === 'claude-sdk' && apiKey ? { apiKey } : {})
+      backend
     })
     onSave()
   }
@@ -57,38 +50,11 @@ export function Settings({ onSave, onClose }: Props): JSX.Element {
             }}
             className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 outline-none focus:ring-1 focus:ring-blue-500/70"
           >
-            <option value="claude-sdk">Claude API (direct)</option>
             <option value="claude-cli">Claude Code CLI</option>
             <option value="codex-cli">OpenAI Codex CLI</option>
+            <option value="gemini-cli">Gemini CLI (experimental)</option>
           </select>
         </div>
-
-        {backend === 'claude-sdk' && (
-          <>
-            <div>
-              <label className="text-gray-400 text-xs block mb-1">Anthropic API Key</label>
-              <input
-                type="password"
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-                placeholder="sk-ant-api03-..."
-                className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 outline-none focus:ring-1 focus:ring-blue-500/70 placeholder-gray-600"
-              />
-            </div>
-            <div>
-              <label className="text-gray-400 text-xs block mb-1">Model</label>
-              <select
-                value={model}
-                onChange={(e) => setModel(e.target.value)}
-                className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 outline-none focus:ring-1 focus:ring-blue-500/70"
-              >
-                <option value="claude-sonnet-4-6">Claude Sonnet 4.6</option>
-                <option value="claude-opus-4-7">Claude Opus 4.7</option>
-                <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5</option>
-              </select>
-            </div>
-          </>
-        )}
 
         {backend === 'claude-cli' && (
           <p className="text-gray-600 text-xs">
@@ -100,11 +66,15 @@ export function Settings({ onSave, onClose }: Props): JSX.Element {
             Requires Codex CLI: <code className="text-gray-400">npm i -g @openai/codex</code>
           </p>
         )}
+        {backend === 'gemini-cli' && (
+          <p className="text-gray-600 text-xs">
+            Requires Gemini CLI: <code className="text-gray-400">npm i -g @google/gemini-cli</code>
+          </p>
+        )}
       </div>
 
       <button
         onClick={handleSave}
-        disabled={backend === 'claude-sdk' && !apiKey && !hasExistingKey}
         className="bg-blue-600 hover:bg-blue-500 text-white rounded px-4 py-2 text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
       >
         Save & Continue

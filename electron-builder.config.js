@@ -1,7 +1,7 @@
 /** @type {import('electron-builder').Configuration} */
 module.exports = {
-  appId: 'com.interview-helper',
-  productName: 'Interview Helper',
+  appId: 'com.agustinjimenez.aihelper',
+  productName: 'AI Helper',
   directories: {
     buildResources: 'build',
     output: 'dist'

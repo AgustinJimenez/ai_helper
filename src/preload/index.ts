@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron'
-import type { ScreenPermissionStatus, SettingsUpdate } from '../shared/types'
+import type { ScreenPermissionStatus, Settings, SettingsUpdate } from '../shared/types'
 
 contextBridge.exposeInMainWorld('api', {
   onCaptureTrigger: (cb: () => void) => {
@@ -34,7 +34,7 @@ contextBridge.exposeInMainWorld('api', {
   },
   capture: (): Promise<void> => ipcRenderer.invoke('capture'),
   askFollowup: (text: string): Promise<void> => ipcRenderer.invoke('ask-followup', text),
-  getSettings: () => ipcRenderer.invoke('get-settings'),
+  getSettings: (): Promise<Settings> => ipcRenderer.invoke('get-settings'),
   setSettings: (settings: SettingsUpdate): Promise<void> =>
     ipcRenderer.invoke('set-settings', settings),
   clearConversation: (): void => {

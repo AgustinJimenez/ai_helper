@@ -13,7 +13,7 @@ declare global {
       onClear(cb: () => void): () => void
       capture(): Promise<void>
       askFollowup(text: string): Promise<void>
-      getSettings(): Promise<Settings & { hasApiKey: boolean }>
+      getSettings(): Promise<Settings>
       setSettings(settings: SettingsUpdate): Promise<void>
       clearConversation(): void
       quit(): void

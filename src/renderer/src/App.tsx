@@ -15,15 +15,12 @@ export default function App(): JSX.Element {
   const [isStreaming, setIsStreaming] = useState(false)
   const [mode, setMode] = useState<InterviewMode>('coding')
   const [showSettings, setShowSettings] = useState(false)
-  const [hasApiKey, setHasApiKey] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [permissionDenied, setPermissionDenied] = useState(false)
 
   useEffect(() => {
     window.api.getSettings().then((s) => {
-      setHasApiKey(s.hasApiKey)
       setMode(s.interviewMode)
-      if (!s.hasApiKey) setShowSettings(true)
     })
 
     window.api.getScreenPermission().then((status) => {
@@ -102,8 +99,8 @@ export default function App(): JSX.Element {
     return (
       <div className="w-full h-screen rounded-xl bg-gray-900/95 backdrop-blur-sm border border-gray-700/50 overflow-hidden">
         <Settings
-          onSave={() => { setShowSettings(false); setHasApiKey(true) }}
-          onClose={hasApiKey ? () => setShowSettings(false) : undefined}
+          onSave={() => setShowSettings(false)}
+          onClose={() => setShowSettings(false)}
         />
       </div>
     )
