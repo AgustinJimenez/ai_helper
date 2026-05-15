@@ -1,4 +1,4 @@
-import type { InterviewMode } from '../../shared/types'
+import type { PromptTemplate } from '../../shared/types'
 
 const CODING_PROMPT = `You are a silent assistant helping someone during a live coding interview.
 A screenshot of a coding problem will be provided.
@@ -65,10 +65,33 @@ Rules:
 - Use [placeholder] for specifics you cannot know (project name, company, metrics).
 - Do not invent facts.`
 
-export function getSystemPrompt(mode: InterviewMode): string {
-  switch (mode) {
-    case 'coding':        return CODING_PROMPT
-    case 'system-design': return SYSTEM_DESIGN_PROMPT
-    case 'behavioral':    return BEHAVIORAL_PROMPT
+const DEFAULT_PROMPT_TEMPLATES: PromptTemplate[] = [
+  {
+    id: 'coding',
+    name: 'Coding',
+    prompt: CODING_PROMPT
+  },
+  {
+    id: 'system-design',
+    name: 'System Design',
+    prompt: SYSTEM_DESIGN_PROMPT
+  },
+  {
+    id: 'behavioral',
+    name: 'Behavioral',
+    prompt: BEHAVIORAL_PROMPT
   }
+]
+
+export function getDefaultPromptTemplates(): PromptTemplate[] {
+  return DEFAULT_PROMPT_TEMPLATES.map((template) => ({ ...template }))
+}
+
+export function getSystemPrompt(promptTemplates: PromptTemplate[], selectedPromptTemplateId: string): string {
+  const selectedTemplate =
+    promptTemplates.find((template) => template.id === selectedPromptTemplateId)
+    ?? promptTemplates[0]
+    ?? DEFAULT_PROMPT_TEMPLATES[0]
+
+  return selectedTemplate.prompt
 }

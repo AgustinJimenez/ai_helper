@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron'
-import type { ScreenPermissionStatus, Settings, SettingsUpdate } from '../shared/types'
+import type { ResizeEdge, ScreenPermissionStatus, Settings, SettingsUpdate } from '../shared/types'
 
 contextBridge.exposeInMainWorld('api', {
   onCaptureTrigger: (cb: () => void) => {
@@ -35,8 +35,12 @@ contextBridge.exposeInMainWorld('api', {
   capture: (): Promise<void> => ipcRenderer.invoke('capture'),
   askFollowup: (text: string): Promise<void> => ipcRenderer.invoke('ask-followup', text),
   getSettings: (): Promise<Settings> => ipcRenderer.invoke('get-settings'),
+  getInteractionEnabled: (): Promise<boolean> => ipcRenderer.invoke('get-interaction-enabled'),
   setSettings: (settings: SettingsUpdate): Promise<void> =>
     ipcRenderer.invoke('set-settings', settings),
+  setInteractionEnabled: (enabled: boolean): void => {
+    ipcRenderer.send('set-interaction-enabled', enabled)
+  },
   clearConversation: (): void => {
     ipcRenderer.send('clear-conversation')
   },
@@ -52,5 +56,12 @@ contextBridge.exposeInMainWorld('api', {
     ipcRenderer.send('open-screen-settings')
   },
   getScreenPermission: (): Promise<ScreenPermissionStatus> => ipcRenderer.invoke('get-screen-permission'),
-  moveWindowBy: (dx: number, dy: number): void => ipcRenderer.send('move-window-by', { dx, dy })
+  moveWindowBy: (dx: number, dy: number): void => ipcRenderer.send('move-window-by', { dx, dy }),
+  resizeWindowBy: (edge: ResizeEdge, dx: number, dy: number): void =>
+    ipcRenderer.send('resize-window-by', { edge, dx, dy }),
+  onInteractionModeChange: (cb: (enabled: boolean) => void) => {
+    const listener = (_: Electron.IpcRendererEvent, data: { enabled: boolean }): void => cb(data.enabled)
+    ipcRenderer.on('interaction:mode', listener)
+    return () => ipcRenderer.removeListener('interaction:mode', listener)
+  }
 })

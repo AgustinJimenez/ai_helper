@@ -16,23 +16,43 @@ interface Props {
 }
 
 export function Answer({ messages, isStreaming, error }: Props): JSX.Element {
+  const containerRef = useRef<HTMLDivElement>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
+  const stickToBottomRef = useRef(true)
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
+    if (!stickToBottomRef.current) {
+      return
+    }
+
+    const container = containerRef.current
+    if (!container) {
+      return
+    }
+
+    container.scrollTop = container.scrollHeight
+  }, [messages, isStreaming])
+
+  const handleScroll = (): void => {
+    const container = containerRef.current
+    if (!container) {
+      return
+    }
+
+    const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight
+    stickToBottomRef.current = distanceFromBottom < 32
+  }
 
   if (messages.length === 0 && !error) {
-    return (
-      <div className="flex-1 flex flex-col items-center justify-center gap-2 text-gray-600">
-        <span className="text-2xl">⌘⇧Space</span>
-        <span className="text-xs">Cmd+Shift+Space to capture screen</span>
-      </div>
-    )
+    return <div className="flex-1" />
   }
 
   return (
-    <div className="flex-1 overflow-y-auto px-3 py-2 space-y-2">
+    <div
+      ref={containerRef}
+      onScroll={handleScroll}
+      className="flex-1 overflow-y-auto px-3 py-2 space-y-2"
+    >
       {messages.map((msg, i) =>
         msg.role === 'user' ? (
           <div key={i} className="text-xs text-gray-500 italic">{msg.content}</div>

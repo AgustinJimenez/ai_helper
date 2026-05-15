@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 
-import type { ScreenPermissionStatus, Settings, SettingsUpdate } from '../../shared/types'
+import type { ResizeEdge, ScreenPermissionStatus, Settings, SettingsUpdate } from '../../shared/types'
 
 declare global {
   interface Window {
@@ -14,13 +14,17 @@ declare global {
       capture(): Promise<void>
       askFollowup(text: string): Promise<void>
       getSettings(): Promise<Settings>
+      getInteractionEnabled(): Promise<boolean>
       setSettings(settings: SettingsUpdate): Promise<void>
+      setInteractionEnabled(enabled: boolean): void
       clearConversation(): void
       quit(): void
       onPermissionError(cb: () => void): () => void
       openScreenSettings(): void
       getScreenPermission(): Promise<ScreenPermissionStatus>
       moveWindowBy(dx: number, dy: number): void
+      resizeWindowBy(edge: ResizeEdge, dx: number, dy: number): void
+      onInteractionModeChange(cb: (enabled: boolean) => void): () => void
     }
   }
 }

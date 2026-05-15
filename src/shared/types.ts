@@ -8,9 +8,29 @@ export type BackendType = typeof BACKEND_TYPES[number]
 
 export type ScreenPermissionStatus = 'granted' | 'denied' | 'not-determined'
 
+export const RESIZE_EDGES = [
+  'left',
+  'right',
+  'top',
+  'bottom',
+  'top-left',
+  'top-right',
+  'bottom-left',
+  'bottom-right'
+] as const
+
+export type ResizeEdge = typeof RESIZE_EDGES[number]
+
+export interface PromptTemplate {
+  id: string
+  name: string
+  prompt: string
+}
+
 export interface Settings {
   backend: BackendType
-  interviewMode: InterviewMode
+  selectedPromptTemplateId: string
+  promptTemplates: PromptTemplate[]
   overlayOpacity: number
 }
 

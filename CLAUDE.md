@@ -92,18 +92,19 @@ backend: "claude-cli" | "codex-cli" | "gemini-cli"
 overlayOpacity: number (0.0 - 1.0)
 overlayPosition: { x, y, width, height }
 hotkeys: { capture, toggle, clear }
-interviewMode: "coding" | "system-design" | "behavioral"
+selectedPromptTemplateId: string
+promptTemplates: Array<{ id, name, prompt }>
 ```
 
 ## System Prompts
 
-See `src/main/ai/prompts.ts` for full templates. No user profile needed — prompts are mode-specific and focused purely on what an interviewer will ask about.
+See `src/main/ai/prompts.ts` for the seeded default templates. Users can create, edit, and delete prompt templates in Settings, and the selected template drives the system prompt for every backend request.
 
-**Coding mode** — solution, explanation of approach, time + space complexity, edge cases, likely interviewer follow-ups.
+**Coding** — solution, explanation of approach, time + space complexity, edge cases, likely interviewer follow-ups.
 
-**System design mode** — components, data flow, trade-offs, scale estimates, likely follow-ups.
+**System Design** — components, data flow, trade-offs, scale estimates, likely follow-ups.
 
-**Behavioral mode** — STAR-format answer, concise enough to speak in ~2 minutes.
+**Behavioral** — STAR-format answer, concise enough to speak in ~2 minutes.
 
 ## AI Backend Notes
 

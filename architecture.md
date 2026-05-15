@@ -259,16 +259,18 @@ Rules:
 
 ```typescript
 // src/main/ai/prompts.ts
-export function getSystemPrompt(mode: InterviewMode): string {
-  switch (mode) {
-    case "coding":        return CODING_PROMPT
-    case "system-design": return SYSTEM_DESIGN_PROMPT
-    case "behavioral":    return BEHAVIORAL_PROMPT
-  }
+export function getSystemPrompt(
+  promptTemplates: PromptTemplate[],
+  selectedPromptTemplateId: string
+): string {
+  return (
+    promptTemplates.find((template) => template.id === selectedPromptTemplateId)
+    ?? promptTemplates[0]
+  ).prompt
 }
 ```
 
-The system prompt is passed as the `system` parameter on every API call and prepended to the conversation for CLI backends.
+The selected prompt template is stored in user settings, exposed in the toolbar dropdown, and passed as the system prompt on every backend request.
 
 ## Security Notes
 

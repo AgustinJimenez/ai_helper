@@ -1,15 +1,14 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
-import type { InterviewMode } from '../../../shared/types'
-
-const MODES: { value: InterviewMode; label: string }[] = [
-  { value: 'coding', label: 'Coding' },
-  { value: 'system-design', label: 'System Design' },
-  { value: 'behavioral', label: 'Behavioral' }
-]
+import { useState, useRef, useEffect } from 'react'
+import type { BackendType, PromptTemplate } from '../../../shared/types'
+import { useWindowDrag } from '../lib/useWindowDrag'
 
 interface Props {
-  mode: InterviewMode
-  onModeChange: (mode: InterviewMode) => void
+  promptTemplates: PromptTemplate[]
+  selectedPromptTemplateId: string
+  backend: BackendType
+  interactionEnabled: boolean
+  onPromptTemplateChange: (promptTemplateId: string) => void
+  onBackendChange: (backend: BackendType) => void
   onCapture: () => void
   onSettings: () => void
   onClear: () => void
@@ -20,9 +19,29 @@ interface Props {
 
 const COUNTDOWN_START = 3
 
-export function Toolbar({ mode, onModeChange, onCapture, onSettings, onClear, onQuit, isCapturing, hasMessages }: Props): JSX.Element {
+const BACKEND_OPTIONS: { value: BackendType; label: string }[] = [
+  { value: 'claude-cli', label: 'Claude Code' },
+  { value: 'codex-cli', label: 'Codex' },
+  { value: 'gemini-cli', label: 'Gemini CLI' }
+]
+
+export function Toolbar({
+  promptTemplates,
+  selectedPromptTemplateId,
+  backend,
+  interactionEnabled,
+  onPromptTemplateChange,
+  onBackendChange,
+  onCapture,
+  onSettings,
+  onClear,
+  onQuit,
+  isCapturing,
+  hasMessages
+}: Props): JSX.Element {
   const [countdown, setCountdown] = useState<number | null>(null)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const handleDragMouseDown = useWindowDrag()
 
   const startCountdown = (): void => {
     if (isCapturing) return
@@ -52,30 +71,6 @@ export function Toolbar({ mode, onModeChange, onCapture, onSettings, onClear, on
   // Clean up on unmount
   useEffect(() => () => cancelCountdown(), [])
 
-  const [isDragging, setIsDragging] = useState(false)
-
-  const handleGripMouseDown = useCallback((e: React.MouseEvent) => {
-    e.preventDefault()
-    let lastX = e.screenX
-    let lastY = e.screenY
-    setIsDragging(true)
-
-    const onMouseMove = (ev: MouseEvent): void => {
-      window.api.moveWindowBy(ev.screenX - lastX, ev.screenY - lastY)
-      lastX = ev.screenX
-      lastY = ev.screenY
-    }
-
-    const onMouseUp = (): void => {
-      setIsDragging(false)
-      document.removeEventListener('mousemove', onMouseMove)
-      document.removeEventListener('mouseup', onMouseUp)
-    }
-
-    document.addEventListener('mousemove', onMouseMove)
-    document.addEventListener('mouseup', onMouseUp)
-  }, [])
-
   const captureLabel = (): string => {
     if (isCapturing) return '⏳'
     if (countdown !== null) return String(countdown)
@@ -87,14 +82,6 @@ export function Toolbar({ mode, onModeChange, onCapture, onSettings, onClear, on
       className="flex items-center gap-0.5 px-2 py-1 border-b border-gray-700/50 flex-shrink-0"
       style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
     >
-      <div
-        title="Drag to move"
-        onMouseDown={handleGripMouseDown}
-        className="flex items-center justify-center w-4 h-5 text-gray-600 hover:text-gray-400 transition-colors flex-shrink-0 mr-0.5 select-none"
-        style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
-      >
-        ⠿
-      </div>
       <button
         onClick={() => { cancelCountdown(); onCapture() }}
         onMouseEnter={startCountdown}
@@ -107,20 +94,37 @@ export function Toolbar({ mode, onModeChange, onCapture, onSettings, onClear, on
       >
         {captureLabel()}
       </button>
-      <div className="flex gap-0.5 flex-1 mx-1">
-        {MODES.map((m) => (
-          <button
-            key={m.value}
-            onClick={() => onModeChange(m.value)}
-            className={`px-2 py-0.5 rounded text-xs transition-colors ${
-              mode === m.value
-                ? 'bg-blue-600 text-white'
-                : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800'
-            }`}
-          >
-            {m.label}
-          </button>
+      <select
+        value={selectedPromptTemplateId}
+        onChange={(event) => onPromptTemplateChange(event.target.value)}
+        title="Prompt template"
+        className="mx-1 w-40 bg-gray-800 text-white text-xs rounded px-2 py-1 outline-none focus:ring-1 focus:ring-blue-500/70 flex-shrink-0"
+      >
+        {promptTemplates.map((template) => (
+          <option key={template.id} value={template.id}>
+            {template.name}
+          </option>
         ))}
+      </select>
+      <select
+        value={backend}
+        onChange={(event) => onBackendChange(event.target.value as BackendType)}
+        title="AI provider"
+        className="mx-1 w-36 bg-gray-800 text-white text-xs rounded px-2 py-1 outline-none focus:ring-1 focus:ring-blue-500/70 flex-shrink-0"
+      >
+        {BACKEND_OPTIONS.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+      <div
+        title={interactionEnabled ? 'Drag to move' : undefined}
+        onMouseDown={handleDragMouseDown}
+        data-interaction-toggle="true"
+        className="mx-1 flex min-w-0 flex-1 items-center rounded px-2 py-1 select-none hover:bg-gray-800/40"
+      >
+        <span className="sr-only">Drag to move window</span>
       </div>
       <button
         onClick={onClear}
@@ -132,7 +136,7 @@ export function Toolbar({ mode, onModeChange, onCapture, onSettings, onClear, on
       </button>
       <button
         onClick={onSettings}
-        title="Settings"
+        title={interactionEnabled ? 'Settings' : 'Hover Adjust first'}
         className="text-gray-500 hover:text-gray-300 px-1.5 py-0.5 rounded text-xs hover:bg-gray-800 transition-colors"
       >
         ⚙
