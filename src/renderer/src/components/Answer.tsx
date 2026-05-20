@@ -57,7 +57,7 @@ export function Answer({ messages, isStreaming, error }: Props): JSX.Element {
         msg.role === 'user' ? (
           <div key={i} className="text-xs text-gray-500 italic">{msg.content}</div>
         ) : (
-          <div key={i} className="text-sm text-gray-100">
+          <div key={i} className="text-sm text-gray-100 min-w-0 overflow-hidden">
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
               components={{
@@ -69,14 +69,29 @@ export function Answer({ messages, isStreaming, error }: Props): JSX.Element {
                       <SyntaxHighlighter
                         style={oneDark}
                         language={match[1]}
-                        customStyle={{ fontSize: '12px', borderRadius: '6px', margin: '6px 0' }}
+                        wrapLongLines
+                        customStyle={{
+                          fontSize: '12px',
+                          borderRadius: '6px',
+                          margin: '6px 0',
+                          maxWidth: '100%',
+                          overflowX: 'hidden',
+                          whiteSpace: 'pre-wrap',
+                          wordBreak: 'break-word'
+                        }}
+                        codeTagProps={{
+                          style: {
+                            whiteSpace: 'pre-wrap',
+                            wordBreak: 'break-word'
+                          }
+                        }}
                       >
                         {code}
                       </SyntaxHighlighter>
                     )
                   }
                   return (
-                    <code className="bg-gray-800 text-green-400 px-1.5 py-0.5 rounded text-xs font-mono">
+                    <code className="bg-gray-800 text-green-400 px-1.5 py-0.5 rounded text-xs font-mono break-words whitespace-pre-wrap">
                       {children}
                     </code>
                   )
@@ -91,10 +106,10 @@ export function Answer({ messages, isStreaming, error }: Props): JSX.Element {
                   return <ul className="list-disc list-inside space-y-0.5 my-1">{children}</ul>
                 },
                 li({ children }) {
-                  return <li className="text-gray-200 text-sm">{children}</li>
+                  return <li className="text-gray-200 text-sm break-words">{children}</li>
                 },
                 p({ children }) {
-                  return <p className="text-gray-200 my-1 leading-relaxed">{children}</p>
+                  return <p className="text-gray-200 my-1 leading-relaxed break-words">{children}</p>
                 }
               }}
             >
