@@ -12,6 +12,7 @@ export function Settings({ onSave, onClose }: Props): JSX.Element {
   const [promptTemplates, setPromptTemplates] = useState<PromptTemplate[]>([])
   const [selectedPromptTemplateId, setSelectedPromptTemplateId] = useState('coding')
   const [overlayOpacity, setOverlayOpacity] = useState(95)
+  const [availability, setAvailability] = useState<Record<BackendType, boolean> | null>(null)
 
   useEffect(() => {
     window.api.getSettings().then((s) => {
@@ -20,6 +21,7 @@ export function Settings({ onSave, onClose }: Props): JSX.Element {
       setSelectedPromptTemplateId(s.selectedPromptTemplateId)
       setOverlayOpacity(Math.round(s.overlayOpacity * 100))
     })
+    window.api.checkBackendAvailability().then(setAvailability)
   }, [])
 
   const handleSave = async (): Promise<void> => {
@@ -89,37 +91,58 @@ export function Settings({ onSave, onClose }: Props): JSX.Element {
       <div className="space-y-4 flex-1 overflow-y-auto pr-1">
         <div>
           <label className="text-gray-400 text-xs block mb-1">AI Backend</label>
-          <select
-            value={backend}
-            onChange={(e) => {
-              const nextBackend = e.target.value
-              if (isBackendType(nextBackend)) {
-                setBackend(nextBackend)
-              }
-            }}
-            className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 outline-none focus:ring-1 focus:ring-blue-500/70"
-          >
-            <option value="claude-cli">Claude Code CLI</option>
-            <option value="codex-cli">OpenAI Codex CLI</option>
-            <option value="gemini-cli">Gemini CLI (experimental)</option>
-          </select>
+          <div className="space-y-1.5">
+            {(
+              [
+                { value: 'claude-cli', label: 'Claude Code CLI', install: 'npm i -g @anthropic-ai/claude-code' },
+                { value: 'codex-cli', label: 'OpenAI Codex CLI', install: 'npm i -g @openai/codex' },
+                { value: 'gemini-cli', label: 'Gemini CLI (experimental)', install: 'npm i -g @google/gemini-cli' },
+              ] as const
+            ).map(({ value, label, install }) => {
+              const available = availability?.[value]
+              const isSelected = backend === value
+              return (
+                <label
+                  key={value}
+                  className={`flex items-center gap-2.5 px-3 py-2 rounded cursor-pointer border transition-colors ${
+                    isSelected
+                      ? 'border-blue-500/60 bg-blue-900/20'
+                      : 'border-gray-700/50 bg-gray-800/50 hover:bg-gray-800'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="backend"
+                    value={value}
+                    checked={isSelected}
+                    onChange={() => setBackend(value)}
+                    className="sr-only"
+                  />
+                  <span
+                    className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+                      availability === null
+                        ? 'bg-gray-600'
+                        : available
+                          ? 'bg-green-400'
+                          : 'bg-red-500'
+                    }`}
+                    title={
+                      availability === null
+                        ? 'Checking…'
+                        : available
+                          ? 'CLI found'
+                          : `Not installed — ${install}`
+                    }
+                  />
+                  <span className="text-white text-sm flex-1">{label}</span>
+                  {availability !== null && !available && (
+                    <code className="text-gray-500 text-xs hidden sm:block">{install}</code>
+                  )}
+                </label>
+              )
+            })}
+          </div>
         </div>
-
-        {backend === 'claude-cli' && (
-          <p className="text-gray-600 text-xs">
-            Requires Claude Code CLI: <code className="text-gray-400">npm i -g @anthropic-ai/claude-code</code>
-          </p>
-        )}
-        {backend === 'codex-cli' && (
-          <p className="text-gray-600 text-xs">
-            Requires Codex CLI: <code className="text-gray-400">npm i -g @openai/codex</code>
-          </p>
-        )}
-        {backend === 'gemini-cli' && (
-          <p className="text-gray-600 text-xs">
-            Requires Gemini CLI: <code className="text-gray-400">npm i -g @google/gemini-cli</code>
-          </p>
-        )}
 
         <div className="border border-gray-800 rounded-lg p-3 space-y-3">
           <div className="flex items-center justify-between gap-3">

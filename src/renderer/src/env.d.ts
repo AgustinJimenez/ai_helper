@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 
-import type { ResizeEdge, ScreenPermissionStatus, Settings, SettingsUpdate } from '../../shared/types'
+import type { BackendType, ResizeEdge, ScreenPermissionStatus, Settings, SettingsUpdate } from '../../shared/types'
 
 declare global {
   interface Window {
@@ -22,6 +22,7 @@ declare global {
       onPermissionError(cb: () => void): () => void
       openScreenSettings(): void
       getScreenPermission(): Promise<ScreenPermissionStatus>
+      checkBackendAvailability(): Promise<Record<BackendType, boolean>>
       moveWindowBy(dx: number, dy: number): void
       resizeWindowBy(edge: ResizeEdge, dx: number, dy: number): void
       onInteractionModeChange(cb: (enabled: boolean) => void): () => void

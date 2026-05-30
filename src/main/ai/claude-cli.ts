@@ -1,9 +1,14 @@
 import { spawn } from 'node:child_process'
 import type { AIBackend } from './backend'
 import type { Message } from '../../shared/types'
+import { SPAWN_ENV, resolveCommand } from './spawn-env'
 
 export class ClaudeCliBackend implements AIBackend {
   private sessionId: string | null = null
+
+  checkAvailability(): boolean {
+    return resolveCommand('claude') !== null
+  }
 
   resetSession(): void {
     this.sessionId = null
@@ -34,7 +39,7 @@ export class ClaudeCliBackend implements AIBackend {
     }
 
     return new Promise((resolve, reject) => {
-      const proc = spawn('claude', args, { stdio: ['pipe', 'pipe', 'pipe'] })
+      const proc = spawn('claude', args, { stdio: ['pipe', 'pipe', 'pipe'], env: SPAWN_ENV })
 
       proc.stdin.on('error', () => {})
       proc.stdin.write(JSON.stringify(inputMsg) + '\n')

@@ -4,7 +4,7 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { registerHotkeys, unregisterHotkeys } from './hotkeys'
 import { captureScreen, getScreenPermission } from './capture'
 import { loadSettings, saveSettings, sanitizeSettingsUpdate } from './settings'
-import { getBackend } from './ai/backend'
+import { getBackend, checkBackendAvailability } from './ai/backend'
 import { getSystemPrompt } from './ai/prompts'
 import type { Message, PromptTemplate, ResizeEdge, Settings } from '../shared/types'
 
@@ -124,6 +124,8 @@ app.whenReady().then(() => {
     setInteractionEnabled(!interactionEnabled)
   })
   setInteractionEnabled(false)
+
+  ipcMain.handle('check-backend-availability', () => checkBackendAvailability())
 
   ipcMain.handle('get-screen-permission', async () => {
     // In dev, Electron inherits Terminal's screen recording permission.

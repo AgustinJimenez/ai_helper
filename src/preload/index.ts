@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron'
-import type { ResizeEdge, ScreenPermissionStatus, Settings, SettingsUpdate } from '../shared/types'
+import type { BackendType, ResizeEdge, ScreenPermissionStatus, Settings, SettingsUpdate } from '../shared/types'
 
 contextBridge.exposeInMainWorld('api', {
   onCaptureTrigger: (cb: () => void) => {
@@ -56,6 +56,8 @@ contextBridge.exposeInMainWorld('api', {
     ipcRenderer.send('open-screen-settings')
   },
   getScreenPermission: (): Promise<ScreenPermissionStatus> => ipcRenderer.invoke('get-screen-permission'),
+  checkBackendAvailability: (): Promise<Record<BackendType, boolean>> =>
+    ipcRenderer.invoke('check-backend-availability'),
   moveWindowBy: (dx: number, dy: number): void => ipcRenderer.send('move-window-by', { dx, dy }),
   resizeWindowBy: (edge: ResizeEdge, dx: number, dy: number): void =>
     ipcRenderer.send('resize-window-by', { edge, dx, dy }),

@@ -4,6 +4,7 @@ import path from 'node:path'
 import { spawn } from 'node:child_process'
 import type { AIBackend } from './backend'
 import type { Message } from '../../shared/types'
+import { SPAWN_ENV, resolveCommand } from './spawn-env'
 
 interface GeminiJsonResponse {
   response?: string
@@ -12,6 +13,10 @@ interface GeminiJsonResponse {
 
 export class GeminiCliBackend implements AIBackend {
   private workingDir: string | null = null
+
+  checkAvailability(): boolean {
+    return resolveCommand('gemini') !== null
+  }
 
   resetSession(): void {
     this.cleanupWorkingDir()
@@ -34,10 +39,7 @@ export class GeminiCliBackend implements AIBackend {
       const proc = spawn('gemini', args, {
         cwd: workingDir,
         stdio: ['ignore', 'pipe', 'pipe'],
-        env: {
-          ...process.env,
-          NO_COLOR: '1'
-        }
+        env: SPAWN_ENV,
       })
 
       let stdout = ''

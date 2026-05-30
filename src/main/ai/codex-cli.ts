@@ -1,8 +1,13 @@
 import { spawn } from 'node:child_process'
 import type { AIBackend } from './backend'
 import type { Message } from '../../shared/types'
+import { SPAWN_ENV, resolveCommand } from './spawn-env'
 
 export class CodexCliBackend implements AIBackend {
+  checkAvailability(): boolean {
+    return resolveCommand('codex') !== null
+  }
+
   async sendMessage(
     systemPrompt: string,
     messages: Message[],
@@ -13,7 +18,8 @@ export class CodexCliBackend implements AIBackend {
 
     return new Promise((resolve, reject) => {
       const proc = spawn('codex', [prompt], {
-        stdio: ['ignore', 'pipe', 'pipe']
+        stdio: ['ignore', 'pipe', 'pipe'],
+        env: SPAWN_ENV,
       })
 
       proc.stdout.on('data', (data: Buffer) => onChunk(data.toString()))
