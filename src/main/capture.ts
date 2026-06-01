@@ -5,6 +5,19 @@ export function getScreenPermission(): 'granted' | 'denied' | 'not-determined' {
   return systemPreferences.getMediaAccessStatus('screen') as 'granted' | 'denied' | 'not-determined'
 }
 
+// Triggers the macOS Screen Recording permission dialog immediately on launch
+// by making a minimal getSources() call. Without this, the dialog appears on
+// first capture (during a call). Safe to call before the overlay is ready.
+export async function promptScreenPermission(): Promise<void> {
+  if (process.platform !== 'darwin') return
+  if (getScreenPermission() !== 'not-determined') return
+  try {
+    await desktopCapturer.getSources({ types: ['screen'], thumbnailSize: { width: 1, height: 1 } })
+  } catch {
+    // ignore — we only care about triggering the dialog
+  }
+}
+
 export async function captureScreen(): Promise<string> {
   const primary = screen.getPrimaryDisplay()
   const { width, height } = primary.size

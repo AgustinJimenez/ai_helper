@@ -2,7 +2,7 @@ import { app, BrowserWindow, ipcMain, screen, shell } from 'electron'
 import { join } from 'node:path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { registerHotkeys, unregisterHotkeys } from './hotkeys'
-import { captureScreen, getScreenPermission } from './capture'
+import { captureScreen, getScreenPermission, promptScreenPermission } from './capture'
 import { loadSettings, saveSettings, sanitizeSettingsUpdate } from './settings'
 import { getBackend, checkBackendAvailability } from './ai/backend'
 import { getSystemPrompt } from './ai/prompts'
@@ -117,6 +117,8 @@ app.whenReady().then(() => {
   const settings = loadSettings()
   currentPromptTemplateId = settings.selectedPromptTemplateId
   currentPromptTemplates = settings.promptTemplates
+
+  void promptScreenPermission()
 
   overlay = createOverlay()
   overlay.setOpacity(settings.overlayOpacity)
