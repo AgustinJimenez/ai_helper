@@ -39,6 +39,7 @@ export default function App(): JSX.Element {
   const [interactionEnabled, setInteractionEnabled] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [permissionDenied, setPermissionDenied] = useState(false)
+  const [fontSize, setFontSize] = useState(14)
   const [resizeIndicator, setResizeIndicator] = useState<ResizeIndicatorState | null>(null)
   const rootRef = useRef<HTMLDivElement>(null)
   const handleWindowDrag = useWindowDrag()
@@ -228,6 +229,9 @@ export default function App(): JSX.Element {
         }}
         onClear={handleClear}
         onQuit={() => window.api.quit()}
+        onZoomIn={() => setFontSize((f) => Math.min(f + 2, 22))}
+        onZoomOut={() => setFontSize((f) => Math.max(f - 2, 10))}
+        onMoveWindow={(dx, dy) => window.api.moveWindowBy(dx, dy)}
         isCapturing={isStreaming}
         hasMessages={messages.length > 0}
       />
@@ -253,7 +257,7 @@ export default function App(): JSX.Element {
           </div>
         </div>
       )}
-      <Answer messages={messages} isStreaming={isStreaming} error={error} />
+      <Answer messages={messages} isStreaming={isStreaming} error={error} fontSize={fontSize} />
       <FollowUp onSubmit={handleFollowup} disabled={isStreaming} />
       {RESIZE_HOTSPOTS.map(({ edge, className }) => (
         <div

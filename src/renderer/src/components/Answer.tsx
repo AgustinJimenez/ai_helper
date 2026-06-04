@@ -13,9 +13,10 @@ interface Props {
   messages: Message[]
   isStreaming: boolean
   error: string | null
+  fontSize: number
 }
 
-export function Answer({ messages, isStreaming, error }: Props): JSX.Element {
+export function Answer({ messages, isStreaming, error, fontSize }: Props): JSX.Element {
   const containerRef = useRef<HTMLDivElement>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
   const stickToBottomRef = useRef(true)
@@ -51,13 +52,14 @@ export function Answer({ messages, isStreaming, error }: Props): JSX.Element {
     <div
       ref={containerRef}
       onScroll={handleScroll}
+      style={{ fontSize: `${fontSize}px` }}
       className="flex-1 overflow-y-auto px-3 py-2 space-y-2"
     >
       {messages.map((msg, i) =>
         msg.role === 'user' ? (
-          <div key={i} className="text-xs text-gray-500 italic">{msg.content}</div>
+          <div key={i} style={{ fontSize: '0.85em' }} className="text-gray-500 italic">{msg.content}</div>
         ) : (
-          <div key={i} className="text-sm text-gray-100 min-w-0 overflow-hidden">
+          <div key={i} style={{ fontSize: '1em' }} className="text-gray-100 min-w-0 overflow-hidden">
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
               components={{
@@ -71,7 +73,7 @@ export function Answer({ messages, isStreaming, error }: Props): JSX.Element {
                         language={match[1]}
                         wrapLongLines
                         customStyle={{
-                          fontSize: '12px',
+                          fontSize: '0.85em',
                           borderRadius: '6px',
                           margin: '6px 0',
                           maxWidth: '100%',
@@ -91,13 +93,13 @@ export function Answer({ messages, isStreaming, error }: Props): JSX.Element {
                     )
                   }
                   return (
-                    <code className="bg-gray-800 text-green-400 px-1.5 py-0.5 rounded text-xs font-mono break-words whitespace-pre-wrap">
+                    <code className="bg-gray-800 text-green-400 px-1.5 py-0.5 rounded font-mono break-words whitespace-pre-wrap" style={{ fontSize: '0.85em' }}>
                       {children}
                     </code>
                   )
                 },
                 h2({ children }) {
-                  return <h2 className="text-blue-400 font-bold mt-4 mb-1 text-sm first:mt-0">{children}</h2>
+                  return <h2 className="text-blue-400 font-bold mt-4 mb-1 first:mt-0" style={{ fontSize: '1em' }}>{children}</h2>
                 },
                 strong({ children }) {
                   return <strong className="text-blue-300 font-semibold">{children}</strong>
@@ -106,7 +108,7 @@ export function Answer({ messages, isStreaming, error }: Props): JSX.Element {
                   return <ul className="list-disc list-inside space-y-0.5 my-1">{children}</ul>
                 },
                 li({ children }) {
-                  return <li className="text-gray-200 text-sm break-words">{children}</li>
+                  return <li className="text-gray-200 break-words" style={{ fontSize: '1em' }}>{children}</li>
                 },
                 p({ children }) {
                   return <p className="text-gray-200 my-1 leading-relaxed break-words">{children}</p>
