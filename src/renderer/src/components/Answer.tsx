@@ -57,7 +57,16 @@ export function Answer({ messages, isStreaming, error, fontSize }: Props): JSX.E
     >
       {messages.map((msg, i) =>
         msg.role === 'user' ? (
-          <div key={i} style={{ fontSize: '0.85em' }} className="text-gray-500 italic">{msg.content}</div>
+          <div key={i}>
+            {i > 0 && (
+              <div className="flex items-center gap-2 my-2">
+                <div className="flex-1 border-t border-gray-700/60" />
+                <span className="text-gray-600 flex-shrink-0" style={{ fontSize: '0.75em' }}>new capture</span>
+                <div className="flex-1 border-t border-gray-700/60" />
+              </div>
+            )}
+            <div style={{ fontSize: '0.85em' }} className="text-gray-500 italic">{msg.content}</div>
+          </div>
         ) : (
           <div key={i} style={{ fontSize: '1em' }} className="text-gray-100 min-w-0 overflow-hidden">
             <ReactMarkdown
