@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import type { BackendType, PromptTemplate } from '../../../shared/types'
+import type { BackendType, PromptTemplate, ResizeEdge } from '../../../shared/types'
 import { useWindowDrag } from '../lib/useWindowDrag'
 
 interface Props {
@@ -16,12 +16,14 @@ interface Props {
   onZoomIn: () => void
   onZoomOut: () => void
   onMoveWindow: (dx: number, dy: number) => void
+  onResizeWindow: (edge: ResizeEdge, dx: number, dy: number) => void
   isCapturing: boolean
   hasMessages: boolean
 }
 
 const COUNTDOWN_START = 3
 const MOVE_STEP = 20
+const RESIZE_STEP = 20
 const MOVE_INITIAL_DELAY = 350
 const MOVE_REPEAT_INTERVAL = 70
 
@@ -70,18 +72,16 @@ function useHoverCountdown(onTrigger: () => void): {
   return { countdown, start, cancel }
 }
 
-interface DirButtonProps {
-  dx: number
-  dy: number
+interface HoverRepeatButtonProps {
+  onTrigger: () => void
   rotation: number
-  onMove: (dx: number, dy: number) => void
 }
 
-function DirButton({ dx, dy, rotation, onMove }: DirButtonProps): JSX.Element {
+function HoverRepeatButton({ onTrigger, rotation }: HoverRepeatButtonProps): JSX.Element {
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const onMoveRef = useRef(onMove)
-  onMoveRef.current = onMove
+  const onTriggerRef = useRef(onTrigger)
+  onTriggerRef.current = onTrigger
 
   const stop = useCallback((): void => {
     if (timeoutRef.current) { clearTimeout(timeoutRef.current); timeoutRef.current = null }
@@ -89,11 +89,11 @@ function DirButton({ dx, dy, rotation, onMove }: DirButtonProps): JSX.Element {
   }, [])
 
   const start = useCallback((): void => {
-    onMoveRef.current(dx, dy)
+    onTriggerRef.current()
     timeoutRef.current = setTimeout(() => {
-      intervalRef.current = setInterval(() => onMoveRef.current(dx, dy), MOVE_REPEAT_INTERVAL)
+      intervalRef.current = setInterval(() => onTriggerRef.current(), MOVE_REPEAT_INTERVAL)
     }, MOVE_INITIAL_DELAY)
-  }, [dx, dy])
+  }, [])
 
   useEffect(() => () => stop(), [stop])
 
@@ -132,6 +132,7 @@ export function Toolbar({
   onZoomIn,
   onZoomOut,
   onMoveWindow,
+  onResizeWindow,
   isCapturing,
   hasMessages
 }: Props): JSX.Element {
@@ -231,21 +232,41 @@ export function Toolbar({
           </svg>
         )}
       </button>
-      {/* D-pad: 3×3 grid, arrows at the 4 edge cells */}
+      {/* Move d-pad: 3×3 grid, 4 cardinal directions */}
       <div
         className="grid flex-shrink-0 mx-0.5"
         style={{ gridTemplateColumns: 'repeat(3, 14px)', gridTemplateRows: 'repeat(3, 14px)', gap: 1 }}
         title="Move window — hover to nudge"
       >
         <div />
-        <DirButton dx={0} dy={-MOVE_STEP} rotation={0} onMove={onMoveWindow} />
+        <HoverRepeatButton onTrigger={() => onMoveWindow(0, -MOVE_STEP)} rotation={0} />
         <div />
-        <DirButton dx={-MOVE_STEP} dy={0} rotation={-90} onMove={onMoveWindow} />
+        <HoverRepeatButton onTrigger={() => onMoveWindow(-MOVE_STEP, 0)} rotation={-90} />
         <div />
-        <DirButton dx={MOVE_STEP} dy={0} rotation={90} onMove={onMoveWindow} />
+        <HoverRepeatButton onTrigger={() => onMoveWindow(MOVE_STEP, 0)} rotation={90} />
         <div />
-        <DirButton dx={0} dy={MOVE_STEP} rotation={180} onMove={onMoveWindow} />
+        <HoverRepeatButton onTrigger={() => onMoveWindow(0, MOVE_STEP)} rotation={180} />
         <div />
+      </div>
+      {/* Resize d-pad: 3×3 grid, all 8 directions expand window from that edge/corner */}
+      <div
+        className="grid flex-shrink-0 mx-0.5"
+        style={{ gridTemplateColumns: 'repeat(3, 14px)', gridTemplateRows: 'repeat(3, 14px)', gap: 1 }}
+        title="Resize window — hover to expand in that direction"
+      >
+        <HoverRepeatButton onTrigger={() => onResizeWindow('top-left', -RESIZE_STEP, -RESIZE_STEP)} rotation={-45} />
+        <HoverRepeatButton onTrigger={() => onResizeWindow('top', 0, -RESIZE_STEP)} rotation={0} />
+        <HoverRepeatButton onTrigger={() => onResizeWindow('top-right', RESIZE_STEP, -RESIZE_STEP)} rotation={45} />
+        <HoverRepeatButton onTrigger={() => onResizeWindow('left', -RESIZE_STEP, 0)} rotation={-90} />
+        <div className="flex items-center justify-center">
+          <svg width="8" height="8" viewBox="0 0 8 8" fill="none" aria-hidden="true">
+            <rect x="1.5" y="1.5" width="5" height="5" stroke="currentColor" strokeWidth="1" opacity="0.3"/>
+          </svg>
+        </div>
+        <HoverRepeatButton onTrigger={() => onResizeWindow('right', RESIZE_STEP, 0)} rotation={90} />
+        <HoverRepeatButton onTrigger={() => onResizeWindow('bottom-left', -RESIZE_STEP, RESIZE_STEP)} rotation={-135} />
+        <HoverRepeatButton onTrigger={() => onResizeWindow('bottom', 0, RESIZE_STEP)} rotation={180} />
+        <HoverRepeatButton onTrigger={() => onResizeWindow('bottom-right', RESIZE_STEP, RESIZE_STEP)} rotation={135} />
       </div>
       <div
         title={interactionEnabled ? 'Drag to move' : undefined}

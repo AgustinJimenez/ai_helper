@@ -39,7 +39,7 @@ export default function App(): JSX.Element {
   const [interactionEnabled, setInteractionEnabled] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [permissionDenied, setPermissionDenied] = useState(false)
-  const [fontSize, setFontSize] = useState(14)
+  const [fontSize, setFontSize] = useState(7)
   const [resizeIndicator, setResizeIndicator] = useState<ResizeIndicatorState | null>(null)
   const rootRef = useRef<HTMLDivElement>(null)
   const handleWindowDrag = useWindowDrag()
@@ -232,6 +232,7 @@ export default function App(): JSX.Element {
         onZoomIn={() => setFontSize((f) => Math.min(f + 2, 22))}
         onZoomOut={() => setFontSize((f) => Math.max(f - 2, 10))}
         onMoveWindow={(dx, dy) => window.api.moveWindowBy(dx, dy)}
+        onResizeWindow={(edge, dx, dy) => window.api.resizeWindowBy(edge, dx, dy)}
         isCapturing={isStreaming}
         hasMessages={messages.length > 0}
       />
