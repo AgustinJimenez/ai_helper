@@ -33,7 +33,7 @@ function createOverlay(): BrowserWindow {
   const winW = Math.round(waW / 2)
   const winH = Math.round(waH / 4)
   const x = waX + waW - winW
-  const y = screenH - winH
+  const y = screenH - winH - Math.round(screenH * 0.1)
 
   const win = new BrowserWindow({
     width: winW,
@@ -59,7 +59,7 @@ function createOverlay(): BrowserWindow {
 
   // Force position after load — macOS clamps during construction
   win.webContents.once('did-finish-load', () => {
-    win.setBounds({ x, y: screenH - winH, width: winW, height: winH })
+    win.setBounds({ x, y: screenH - winH - Math.round(screenH * 0.1), width: winW, height: winH })
     syncInteractionState()
   })
 
